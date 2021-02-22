@@ -13,7 +13,6 @@ locals {
 
 data "azurerm_resource_group" "rg" {
   name      = var.rg_name
-  location  = var.location
 }
 
 data "azurerm_virtual_machine" "azure_vm" {
@@ -24,9 +23,6 @@ data "azurerm_virtual_machine" "azure_vm" {
 resource "azurerm_virtual_machine_extension" "linux_vm" {
   count                      = lower(var.os_type) == "linux" ? 1 : 0
   name                       = "${var.vm_name}-run-command"
-  location                   = data.azurerm_resource_group.rg.location
-  resource_group_name        = data.azurerm_resource_group.rg.name
-  virtual_machine_name       = data.azurerm_virtual_machine.azure_vm.name
   publisher                  = "Microsoft.CPlat.Core"
   type                       = "RunCommandLinux"
   type_handler_version       = "1.0"
@@ -39,9 +35,6 @@ resource "azurerm_virtual_machine_extension" "linux_vm" {
 resource "azurerm_virtual_machine_extension" "windows_vm" {
   count                      = lower(var.os_type) == "windows" ? 1 : 0
   name                       = "${var.vm_name}-run-command"
-  location                   = data.azurerm_resource_group.rg.location
-  resource_group_name        = data.azurerm_resource_group.rg.name
-  virtual_machine_name       = data.azurerm_virtual_machine.azure_vm.name
   publisher                  = "Microsoft.CPlat.Core"
   type                       = "RunCommandWindows"
   type_handler_version       = "1.1"
