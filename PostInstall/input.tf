@@ -1,8 +1,12 @@
-variable "resource_group_name" {
+variable "rg_name" {
   description = "The name of the resource group."
 }
 
-variable "virtual_machine_name" {
+variable "location" {
+  description = "Location of resources"
+}
+
+variable "vm_name" {
   description = "The name of the virtual machine."
 }
 
