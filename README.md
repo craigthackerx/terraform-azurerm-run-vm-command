@@ -1,4 +1,4 @@
-### Kudos to [innovationorway](https://github.com/innovationnorway) - original makers of this module.
+### Kudos to [innovationnorway](https://github.com/innovationnorway) - original makers of this module.
 ### Forked on 22/03/2021 - Converted to Terraform 0.14x format with AzureRM 2.48.1 Provider by [craigthackerx](https://github.com/craigthackerx)
 # Run Commmand in Azure VM
 
