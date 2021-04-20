@@ -1,5 +1,6 @@
 ### Kudos to [innovationnorway](https://github.com/innovationnorway) - original makers of this module.
-### Forked on 22/03/2021 - Converted to Terraform 0.14x format with AzureRM 2.48.1 Provider by [craigthackerx](https://github.com/craigthackerx) - [Terraform Registry](https://registry.terraform.io/modules/craigthackerx/run-vm-command/azurerm/latest)
+### Forked on 22/03/2021 
+### Updated 20/04/2021 - Converted to Terraform 0.15x format with AzureRM 2.56.0 Provider by [craigthackerx](https://github.com/craigthackerx) - [Terraform Registry](https://registry.terraform.io/modules/craigthackerx/run-vm-command/azurerm/latest)
 
 # Run Commmand in Azure VM
 
@@ -90,6 +91,23 @@ module "run_command" {
 Install-Module -Name PSWindowsUpdate -Force -AllowClobber
 Get-WUInstall -WindowsUpdate -AcceptAll -UpdateType Software -IgnoreReboot
 Get-WUInstall -MicrosoftUpdate -AcceptAll -IgnoreUserInput -IgnoreReboot
+EOF
+}
+```
+
+### Install from a for_each list, taking the first entry of the list.
+```hcl
+module "post_install_ssh" {
+
+  depends_on = [azurerm_linux_virtual_machine.ssh_vm]
+  source     = "./PostInstall"
+  rg_name    = azurerm_resource_group.ssh_vm.name
+  location   = azurerm_resource_group.ssh_vm.location
+  vm_name    = element(values(azurerm_linux_virtual_machine.ssh_vm, 0)
+  os_type    = "linux"
+
+  script = <<EOF
+   yum install -y git openssh-server
 EOF
 }
 ```

@@ -15,7 +15,7 @@ variable "os_type" {
 }
 
 variable "command" {
-  default     = ""
+  default     = [""]
   description = "Command to be executed."
 }
 

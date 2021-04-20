@@ -1,6 +1,6 @@
 locals {
   settings_windows = {
-    script   = compact(concat(list(var.command), split("\n", var.script)))
+    script   = compact(concat(tolist(var.command), split("\n", var.script)))
     fileUris = var.file_uris
   }
 
@@ -12,7 +12,7 @@ locals {
 }
 
 data "azurerm_resource_group" "rg" {
-  name      = var.rg_name
+  name = var.rg_name
 }
 
 data "azurerm_virtual_machine" "azure_vm" {
