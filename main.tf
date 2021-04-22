@@ -1,18 +1,18 @@
 locals {
   settings_windows = {
-    script   = compact(concat(tolist(var.command), split("\n", var.script)))
+    script   = compact(concat(tolist([var.command]), split("\n", var.script)))
     fileUris = var.file_uris
   }
 
   settings_linux = {
     commandToExecute = var.command
     fileUris         = var.file_uris
-    script           = base64encode(var.script)
+    script           = var.script
   }
 }
 
 data "azurerm_resource_group" "rg" {
-  name = var.rg_name
+  name      = var.rg_name
 }
 
 data "azurerm_virtual_machine" "azure_vm" {
