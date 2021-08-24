@@ -1,10 +1,18 @@
 ### Kudos to [innovationnorway](https://github.com/innovationnorway) - original makers of this module.
-### Forked on 22/03/2021 
-### Updated 20/04/2021 - Converted to Terraform 0.15x format with AzureRM 2.56.0 Provider by [craigthackerx](https://github.com/craigthackerx) - [Terraform Registry](https://registry.terraform.io/modules/craigthackerx/run-vm-command/azurerm/latest)
+### Forked on 22/03/2021 - Converted to Terraform 0.14x format with AzureRM 2.48.1 Provider by [craigthackerx](https://github.com/craigthackerx) - [Terraform Registry](https://registry.terraform.io/modules/craigthackerx/run-vm-command/azurerm/latest)
 
 # Run Commmand in Azure VM
 
 Uses the VM agent to run PowerShell scripts (Windows) or shell scripts (Linux) within an Azure VM. It can be used to bootstrap/install software or run administrative tasks.
+
+As of version v1.0.4, I have made the module simpler by only accepting single commands without line splits, as there are better tools at managing remote state such as a config manager tool e.g. [Ansible](www.ansible.com), and a better tool to run more complex hosted file URI scripts, e.g. [Azure Custom Script Extension](https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-windows).
+
+This means this script is purely to bootstrap something where you want a one time execution, e.g. `sudo yum update -y`, or to install a tool or open a firewall port after the VM has been built.
+
+## Tips
+
+- Ensure you always include some form of logging into your script, such as the `--log-file` paramter to `chocolatey`
+- Try to create a failure state where you always exit with exit 1 for a failure or exit 0 for success, this will help the module not return false positives.
 
 ## Example Usage
 
@@ -15,10 +23,10 @@ module "run_command" {
   source   = "./PostInstall"
   location = "US East"
   rg_name  = "myResourceGroup"
-  vm_name  =  "MyVMName"
+  vm_name  = "MyVMName"
   os_type  = "linux"
 
-  command = "touch /it-works.txt && echo 'it works!' >> /it-works.txt"
+  command = "touch /it-works.txt && echo 'it works!' >> /it-works.txt && exit 0"
 }
 ```
 
@@ -44,7 +52,7 @@ module "run_command" {
   location             = azurerm_resource_group.win_vm.name
   os_type              = "windows"
 
-  command = "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"
+  command = "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) ; choco install -y git"
 }
 ```
 
@@ -70,10 +78,7 @@ module "run_command" {
   vm_name              = azurerm_linux_virtual_machine.linux_vm.name
   os_type              = "linux"
 
-  script = <<EOF
-apt-get update && \
-apt-get install -y git
-EOF
+  command = "apt-get update && apt-get install -y git && exit 0"
 }
 ```
 
@@ -87,28 +92,7 @@ module "run_command" {
   location             = "US West"
   os_type              = "windows"
 
-  script = <<EOF
-Install-Module -Name PSWindowsUpdate -Force -AllowClobber
-Get-WUInstall -WindowsUpdate -AcceptAll -UpdateType Software -IgnoreReboot
-Get-WUInstall -MicrosoftUpdate -AcceptAll -IgnoreUserInput -IgnoreReboot
-EOF
-}
-```
-
-### Install from a for_each list, taking the first entry of the list.
-```hcl
-module "post_install_ssh" {
-
-  depends_on = [azurerm_linux_virtual_machine.ssh_vm]
-  source     = "./PostInstall"
-  rg_name    = azurerm_resource_group.ssh_vm.name
-  location   = azurerm_resource_group.ssh_vm.location
-  vm_name    = element(values(azurerm_linux_virtual_machine.ssh_vm, 0)
-  os_type    = "linux"
-
-  script = <<EOF
-   yum install -y git openssh-server
-EOF
+  command = "Get-WUInstall -MicrosoftUpdate -AcceptAll -IgnoreUserInput -IgnoreReboot ; Install-WindowsFeature -name Web-Server -IncludeManagementTools"
 }
 ```
 
@@ -121,8 +105,6 @@ EOF
 | `location` | `string` | The location of the extension resource - Must match host |
 | `os_type` | `string` | The name of the operating system. Possible values are: `linux` and `windows`. |
 | `command` | `string` | The command to be executed. |
-| `script` | `string` | The script to be executed. Either this or `command` should be specified, but not both. |
-| `file_uris` | `list` | List of URLs for files to be downloaded. |
 | `timestamp` | `string` | Change this value to trigger a rerun of the script. Any integer value is acceptable, it must only be different than the previous value. |
 
 

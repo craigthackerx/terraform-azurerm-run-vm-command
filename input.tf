@@ -19,16 +19,6 @@ variable "command" {
   description = "Command to be executed."
 }
 
-variable "script" {
-  default     = ""
-  description = "Script to be executed."
-}
-
-variable "file_uris" {
-  default     = []
-  description = "List of files to be downloaded."
-}
-
 variable "timestamp" {
   default     = ""
   description = "An integer, intended to trigger re-execution of the script when changed."
