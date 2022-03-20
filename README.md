@@ -1,6 +1,6 @@
 ### Kudos to [innovationnorway](https://github.com/innovationnorway) - original makers of this module.
 ### Forked on 22/03/2021 - Converted to Terraform 0.14x format with AzureRM 2.48.1 Provider by [craigthackerx](https://github.com/craigthackerx) - [Terraform Registry](https://registry.terraform.io/modules/craigthackerx/run-vm-command/azurerm/latest)
-
+### This module is being moved to [libre-devops](https://github.com/libre-devops/terraform-azurerm-run-vm-command).  This edition has been archived
 # Run Commmand in Azure VM
 
 Uses the VM agent to run PowerShell scripts (Windows) or shell scripts (Linux) within an Azure VM. It can be used to bootstrap/install software or run administrative tasks.
