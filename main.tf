@@ -5,7 +5,7 @@ locals {
   # Turn the list into a predictable map for for_each
   cmd_map = {
     for idx, cmd in var.commands :
-    coalesce(cmd.name, "cmd-${idx + 1}") => cmd
+    coalesce(cmd.name, "run-command-${idx + 1}") => cmd
   }
 }
 
