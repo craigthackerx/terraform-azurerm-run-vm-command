@@ -1,40 +1,92 @@
-data "azurerm_resource_group" "target_rg" {
-  name = var.rg_name
+###############################
+# main.tf
+###############################
+locals {
+  # Turn the list into a predictable map for for_each
+  cmd_map = {
+    for idx, cmd in var.commands :
+    coalesce(cmd.name, "cmd-${idx + 1}") => cmd
+  }
 }
 
-data "azurerm_virtual_machine" "azure_vm" {
-  name                = var.vm_name
-  resource_group_name = data.azurerm_resource_group.target_rg.name
-}
+#########################################
+# Windows Run-Command (only if windows)
+#########################################
+resource "azurerm_virtual_machine_run_command" "windows" {
+  for_each = lower(var.os_type) == "windows" ? local.cmd_map : {}
 
-resource "azurerm_virtual_machine_extension" "linux_vm" {
-  count                      = lower(var.os_type) == "linux" ? 1 : 0
-  name                       = "${var.vm_name}-run-command"
-  publisher                  = "Microsoft.CPlat.Core"
-  type                       = "RunCommandLinux"
-  type_handler_version       = "1.0"
-  auto_upgrade_minor_version = true
-
-  protected_settings = jsonencode({
-    commandToExecute = tostring(var.command)
-  })
-
+  name               = each.key
+  location           = var.location
+  virtual_machine_id = var.vm_id
   tags               = var.tags
-  virtual_machine_id = data.azurerm_virtual_machine.azure_vm.id
+
+  run_as_user     = try(each.value.run_as_user, null)
+  run_as_password = try(each.value.run_as_password, null)
+
+  ######################################
+  # pick exactly one source
+  ######################################
+  dynamic "source" {
+    for_each = try(each.value.inline, null) != null ? [1] : []
+    content { script = each.value.inline }
+  }
+  dynamic "source" {
+    for_each = try(each.value.script_file, null) != null ? [1] : []
+    content { script = file(each.value.script_file) }
+  }
+  dynamic "source" {
+    for_each = try(each.value.script_uri, null) != null ? [1] : []
+    content { script_uri = each.value.script_uri }
+  }
+
+  lifecycle {
+    precondition {
+      condition = length(compact([
+        try(each.value.inline, null),
+        try(each.value.script_file, null),
+        try(each.value.script_uri, null)
+      ])) == 1
+      error_message = "Command '${each.key}' must set exactly ONE of inline, script_file, or script_uri."
+    }
+  }
 }
 
-resource "azurerm_virtual_machine_extension" "windows_vm" {
-  count                      = lower(var.os_type) == "windows" ? 1 : 0
-  name                       = "${var.vm_name}-run-command"
-  publisher                  = "Microsoft.CPlat.Core"
-  type                       = "RunCommandWindows"
-  type_handler_version       = "1.1"
-  auto_upgrade_minor_version = true
+#########################################
+# Linux Run-Command (only if linux)
+#########################################
+resource "azurerm_virtual_machine_run_command" "linux" {
+  for_each = lower(var.os_type) == "linux" ? local.cmd_map : {}
 
-  settings = jsonencode({
-    script = tolist([var.command])
-  })
-
+  name               = each.key
+  location           = var.location
+  virtual_machine_id = var.vm_id
   tags               = var.tags
-  virtual_machine_id = data.azurerm_virtual_machine.azure_vm.id
+
+  run_as_user     = try(each.value.run_as_user, null)
+  run_as_password = try(each.value.run_as_password, null)
+
+  # identical source logic -------------------------
+  dynamic "source" {
+    for_each = try(each.value.inline, null) != null ? [1] : []
+    content { script = each.value.inline }
+  }
+  dynamic "source" {
+    for_each = try(each.value.script_file, null) != null ? [1] : []
+    content { script = file(each.value.script_file) }
+  }
+  dynamic "source" {
+    for_each = try(each.value.script_uri, null) != null ? [1] : []
+    content { script_uri = each.value.script_uri }
+  }
+
+  lifecycle {
+    precondition {
+      condition = length(compact([
+        try(each.value.inline, null),
+        try(each.value.script_file, null),
+        try(each.value.script_uri, null)
+      ])) == 1
+      error_message = "Command '${each.key}' must set exactly ONE of inline, script_file, or script_uri."
+    }
+  }
 }
